@@ -5,7 +5,7 @@
 
 </style>
 <body>
-<h1 style="text-align: center; font-family: 'Shadows Into Light', cursive; color: black">USA Flights 2008 Visualization made by Oleksii Renov</h1>
+<h1 style="text-align: center; font-family: 'Shadows Into Light', cursive; color: black">USA Flights 2008 Visualization</h1>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://d3js.org/topojson.v1.min.js"></script>
 <link rel="stylesheet" type="text/css" href="css/main.css">
@@ -38,13 +38,12 @@
                     .attr("style", function(d){
                         return d.properties.name;
                     });
-            
-                data.forEach(function(d) { d.Freq = +d.Freq; });
+                data.forEach(function(d) { d.outboundFreq = +d.outboundFreq; });
                 var maxFreq = d3.max(data, function(d) { 
-                    return d.Freq; 
+                    return d.outboundFreq; 
                 });
                 var minFreq = d3.min(data, function(d) { 
-                    return d.Freq; 
+                    return d.outboundFreq; 
                 });
                 var scaleRadius = d3.scale.log()
                         .domain([minFreq, maxFreq])
@@ -60,7 +59,6 @@
                 var scaleLink = d3.scale.linear()
                         .domain([minLinkFreq, maxLinkFreq])
                         .range([1, 14]);
-                console.log(links);
                 var link = svg.selectAll(".link")
                     .data(links)
                     .enter().append("g")
@@ -90,8 +88,6 @@
                       })
                     .style("stroke", "grey")
                     .style("stroke-width", function(d) { 
-                        console.log(d.freq);
-                        console.log(scaleLink(d.freq));
                         return scaleLink(d.freq); 
                     });
 
@@ -105,10 +101,12 @@
                    .attr("cy", function(d) {
                            return projection([d.long, d.lat])[1];
                    })
-                   .attr("r", function(d){return scaleRadius(d.Freq);})
+                   .attr("r", function(d){
+                        return scaleRadius(d.outboundFreq);
+                   })
                    .attr("city", function(d){return d.city;})
                    .attr("airport", function(d){return d.airport;})
-                   .attr("freq", function(d){return d.Freq;})
+                   .attr("freq", function(d){return d.outboundFreq;})
                    .attr("stateabbrv", function(d){return d.state;})
                    .attr("id", function(d) {return d.Var1;})
                    .style("fill", "steelblue")
@@ -120,11 +118,11 @@
                         div.transition()        
                             .duration(200)      
                             .style("opacity", .9);      
-                        div.html("<b>State: </b>" + d.State + "<br/>" + "<b>City: </b> " + d.city + "<br/>"  +  "<b>Number of flights: </b>" + d.Freq + "<br/>" + "<b>Airport: </b>" + d.airport )  
+                        div.html("<b>City: </b>" + d.city + ", " +  d.state + "<br/>" +  "<b>Origin flights: </b>" + d.inboundFreq + "<br/>" +  "<b>Destination flights: </b>" + d.outboundFreq + "<br/>" + "<b>Airport: </b>" + d.airport)  
                             .style("left", (d3.event.pageX) + "px")     
                             .style("top", (d3.event.pageY - 28) + "px");    
 
-                        d3.selectAll(".from" + d.Var1 + ":not(.pathlabel")
+                        d3.selectAll(".from" + d.Var1 + ":not(.pathlabel)")
                             .transition()
                             .duration(500)
                             .style("stroke", "green")
@@ -159,7 +157,28 @@
                         d3.select(this).style("fill", "steelblue");
 
                     });
-            });
+
+                    var legend = svg.selectAll(".legend")
+                        .data(keys.slice().reverse())
+                        .enter().append("g")
+                        .attr("class", "legend")
+                        .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+                    legend.append("rect")
+                        .attr("x", width - 18)
+                        .attr("width", 18)
+                        .attr("height", 18)
+                        .style("fill", color)
+                        .style("stroke", "black")
+                        .style("stroke-width", 1);
+
+                    legend.append("text")
+                        .attr("x", width - 24)
+                        .attr("y", 9)
+                        .attr("dy", ".35em")
+                        .style("text-anchor", "end")
+                        .text(function(d) { return d; });
+                });
 
         });
     });
