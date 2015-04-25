@@ -1,15 +1,13 @@
 body {
     height: 100%;
     width: 100%;
-    text-align: center;
-        background-image: url("../images/background.png");
+    background-image: url("../images/background.png");
     overflow: hidden;
-    margin: 0;
 }
 
 path { 
     fill: #aaa; 
-    opacity: 0.8;
+    opacity: 0.9;
 }
 
 div.tooltip {   
@@ -28,5 +26,5 @@ div.tooltip {
 .link {
   fill: none;
   stroke: #000;
-  stroke-opacity: .1;
+  stroke-opacity: .00;
 }
