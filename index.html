@@ -67,14 +67,19 @@ var svg2 = d3.select("body").append("svg")
     .attr("height", height)
     .attr("id", "charts");
 
+
+// Creation of different groups -> easily manipulate with dom
 var g  = svg.append("g");
 var g2 = svg.append("g").attr("id", "airports"); 
 var g3 = svg.append("g").attr("id", "alllinks");
 var selectedAirport = null;
 
+
+// Loading data
 d3.json("/data/us.json", function(error, us) {
     d3.csv("data/links.csv", function(links){  
         d3.csv("data/city.csv", function(data) {
+            // Draw map and state borders
             g.append("g")
                 .attr("id", "states")
                 .selectAll("path")
@@ -87,6 +92,8 @@ d3.json("/data/us.json", function(error, us) {
                 .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
                 .attr("id", "state-borders")
                 .attr("d", path);
+
+            // Flights data preprocessing
             data.forEach(function(d) { d.outboundFreq = +d.outboundFreq; });
                 var maxFreq = d3.max(data, function(d) { return d.outboundFreq; });
                 var minFreq = d3.min(data, function(d) { return d.outboundFreq; });
@@ -100,7 +107,7 @@ d3.json("/data/us.json", function(error, us) {
                 var scaleLink = d3.scale.pow().exponent(2)
                         .domain([minLinkFreq, maxLinkFreq])
                         .range([1, 5]);
-              
+              // Adding airports to group g2
                 g2.selectAll("circle")
                    .data(data)
                    .enter()
@@ -116,7 +123,7 @@ d3.json("/data/us.json", function(error, us) {
                    .style("fill", "steelblue")
                    .style("opacity", 0.75)
                    
-                    
+                // Adding action to airports circles
                 g2.selectAll("circle")
                     .on("mouseover", function(d) {
                         div.transition()        
@@ -134,8 +141,9 @@ d3.json("/data/us.json", function(error, us) {
                         d3.select(this).style("fill", "steelblue");
                     })
                     .on("click", function(current) {
-
+                      // Complex action, subset data, draw chart, draw links
                       if (selectedAirport != current) {
+                        // Subset "from" frequencies
                         var dataChartOutbound = links.filter(function(d) { return current.Var1 == d.from; })
                                                      .map(function(d) {   
                                                         var obj = {};
@@ -145,6 +153,7 @@ d3.json("/data/us.json", function(error, us) {
                                                         return obj;
                                                      })
                                                      .sort(compare).slice(1,20);
+                        // Subset "to" frequencies
                         var dataChartInbound = links.filter(function(d) { return current.Var1 == d.to; })
                                                     .map(function(d) {
                                                       var obj = {};
@@ -155,9 +164,12 @@ d3.json("/data/us.json", function(error, us) {
                                                     })
                                                     .sort(compare).slice(1,20);
 
+                        // Concat two data sets
                         var dataChart = dataChartInbound.concat(dataChartOutbound);
+                        // Remove previous chart
                         svg2.selectAll('*').remove();
                         console.log(dataChart);
+                        //Draw grouped horizontal bar chart using dimple.js
                         var myChart = new dimple.chart(svg2, dataChart);
                         myChart.setBounds(80, 30, width/1.5, height - 70)
                         var x = myChart.addMeasureAxis("x", "freq");
@@ -169,7 +181,10 @@ d3.json("/data/us.json", function(error, us) {
                         x.titleShape.text("Frequency")
 
                         selectedAirport = current;
+                        
+                        // Remove previous links
                         g3.selectAll("path").remove();
+                        // Draw new links
                         var redraw = new Set();
                         g3.selectAll(".linkg")
                             .data(links.filter(function(d) {
@@ -232,6 +247,7 @@ d3.json("/data/us.json", function(error, us) {
     })
 });
 
+// Function for sorting data
 function compare(a, b) {
   if (a.airport < b.airport)
      return -1;
@@ -240,6 +256,7 @@ function compare(a, b) {
   return 0;
 }
 
+// Function for zooming data
 function clicked(d) {
   var x, y, k;
   console.log(d);
